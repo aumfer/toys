@@ -1,0 +1,85 @@
+cmake_minimum_required(VERSION 3.16)
+project(toys-in-the-attic)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+if (WIN32)
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+add_compile_definitions(NOMINMAX)
+#set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>") #3.25+
+endif()
+
+add_library(engine engine.cpp engine.h HandmadeMath/HandmadeMath.h glad/src/gles2.c glad/include/glad/gles2.h)
+target_include_directories(engine PUBLIC glad/include)
+target_include_directories(engine PUBLIC HandmadeMath)
+target_compile_definitions(engine PUBLIC HANDMADE_MATH_USE_TURNS)
+target_include_directories(engine PUBLIC .)
+
+if (EMSCRIPTEN)
+set_target_properties(engine PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(engine PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()
+
+if (WIN32)
+#target_compile_options(engine PRIVATE /FA)
+endif()
+
+find_package(glfw3 CONFIG REQUIRED)
+target_link_libraries(engine PUBLIC glfw)
+
+if (NOT EMSCRIPTEN)
+find_package(CURL REQUIRED)
+target_link_libraries(engine PUBLIC CURL::libcurl)
+endif ()
+
+find_package(Stb REQUIRED)
+target_include_directories(engine PUBLIC ${Stb_INCLUDE_DIR})
+
+find_package(nlohmann_json CONFIG REQUIRED)
+target_link_libraries(engine PRIVATE nlohmann_json::nlohmann_json)
+target_compile_definitions(engine PRIVATE JSON_NO_IO)
+
+find_path(UTHASH_INCLUDE_DIRS "utarray.h")
+target_include_directories(engine PRIVATE ${UTHASH_INCLUDE_DIRS})
+
+find_package(rxcpp CONFIG REQUIRED)
+target_link_libraries(engine PRIVATE rxcpp)
+
+#include(GenerateExportHeader)
+#generate_export_header(engine)
+
+
+add_executable(earth earth.cpp)
+target_link_libraries(earth engine)
+if (EMSCRIPTEN)
+set_target_properties(earth PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker,webview -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(earth PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()
+add_executable(galaxy galaxy.cpp)
+target_link_libraries(galaxy engine)
+if (EMSCRIPTEN)
+set_target_properties(galaxy PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker,webview -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(galaxy PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()
+
+add_executable(dota dota.cpp)
+target_link_libraries(dota engine)
+if (EMSCRIPTEN)
+set_target_properties(dota PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker,webview -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(dota PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()
+
+add_executable(tetris tetris.cpp)
+target_link_libraries(tetris engine)
+if (EMSCRIPTEN)
+set_target_properties(tetris PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker,webview -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(tetris PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()
+
+add_executable(sim2d sim2d.cpp)
+target_link_libraries(sim2d engine)
+if (EMSCRIPTEN)
+set_target_properties(sim2d PROPERTIES LINK_FLAGS "-sENVIRONMENT=web,worker,webview -sFETCH -sALLOW_MEMORY_GROWTH -sUSE_PTHREADS -sPTHREAD_POOL_SIZE=3")
+set_target_properties(sim2d PROPERTIES COMPILE_FLAGS "-matomics -mbulk-memory -O3 -flto")
+endif()

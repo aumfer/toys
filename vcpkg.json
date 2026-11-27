@@ -1,0 +1,16 @@
+{
+  "dependencies": [
+    {
+      "name":"glfw3"
+    },
+    {
+      "name":"curl",
+      "features": ["non-http","ssl","websockets"],
+      "platform": "!emscripten"
+    },
+    "stb",
+    "nlohmann-json",
+    "uthash",
+    "rxcpp"
+  ]
+}
