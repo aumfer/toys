@@ -27,28 +27,15 @@ struct {
     HMM_Vec3 up = {0,0,1};
     HMM_Mat4 projection = HMM_M4D(1.0);
 } camera;
-static inline HMM_Vec3 SpherePosition(HMM_Vec2 coord) {
-    HMM_Vec3 p;
-    p.X = coord.X;
-    p.Y = coord.Y;
-    p.Z = -HMM_SqrtF(1-p.X*p.X-p.Y*p.Y);
-    if (isnan(p.Z)) p.Z = 0;
-    return p;
-}
-static inline HMM_Vec3 ECEFPosition(HMM_Vec2 llnorm) {
-    static const HMM_Vec3 WGS84 = {6.378137,6.378137,6.356752314245};
+static inline HMM_Vec3 SpherePosition(HMM_Vec2 llnorm) {
     float lat = llnorm.X * (HMM_PI*0.5);
     float lng = llnorm.Y * (HMM_PI);
-    float a = WGS84.Elements[1];
-    float b = WGS84.Elements[2];
-    float e2 = 1 - (b*b)/(a*a);
-    float n = a / HMM_SqrtF(1-e2*(sinf(lat)*sinf(lat)));
-    float h = 0;//
-    HMM_Vec3 ecef;
-    ecef.X = (n+h)*cosf(lat)*cosf(lng);
-    ecef.Y = (n+h)*cosf(lat)*sinf(lng);
-    ecef.Z = ((1-e2)*n+h)*sinf(lat);
-    return ecef;
+
+    HMM_Vec3 p;
+    p.X = cosf(lat) * cosf(lng);
+    p.Y = cosf(lat) * sinf(lng);
+    p.Z = sinf(lat);
+    return p;
 }
 void init() {
 #if _DEBUG
@@ -70,7 +57,7 @@ void run() {
     llnorm.X = my/window.height;
     llnorm.X = 1 - llnorm.X;
     llnorm.X = llnorm.X * 2 - 1;
-    camera.target = ECEFPosition(llnorm);
+    camera.target = SpherePosition(llnorm);
     camera.view = HMM_LookAt_RH(camera.eye,camera.target,camera.up);
     float aspect = window.width/float(window.height);
     float fov = HMM_AngleDeg(75.178177);

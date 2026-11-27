@@ -19,5 +19,5 @@ wasm:
 #cmake -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=emscripten.cmake -B build-wasm
 emcmake cmake -DCMAKE_TOOLCHAIN_FILE=emscripten.cmake -B build-wasm
 cmake --build build-wasm
-npx serve -c serve.json
 ```
+![dota](https://umfer.us/dota/dota.gif)

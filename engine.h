@@ -526,9 +526,17 @@ static void onreadystatechange(emscripten_fetch_t *fetch) {
             texturebase::operator()(min_filter,mag_filter,wrap_s,wrap_t);
             fetch(url,[url,this](const char *data, int len) {
                 decode d;
-                if (endswith(url,".dds")) upload_dds(data);
-                else if (endswith(url,".pvr")) upload_pvr(data);
-                else {
+                if (endswith(url,".dds")) {
+                    upload_dds(data);
+#ifndef __EMSCRIPTEN__
+                    free((void *)data);
+#endif
+                } else if (endswith(url,".pvr")) {
+                    upload_pvr(data);
+#ifndef __EMSCRIPTEN__
+                    free((void *)data);
+#endif
+                } else {
 #ifndef __EMSCRIPTEN__
                 d.data = (stbi_uc*)data;
 #else
@@ -2236,7 +2244,7 @@ static void onreadystatechange(emscripten_fetch_t *fetch) {
             if (!start) start=glfwGetTime();
             t = glfwGetTime()-start;
             //t -= 1;
-            t *= 0.25;
+            //t *= 0.25;
             c = 0;
             while ((c = (gltfanimationchannel*)utarray_next(animation->channels,c))) {
                 if (!c->target.path) continue;

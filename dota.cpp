@@ -5,11 +5,34 @@ engine::gltfprogram program;
 engine::gltfanimate animate;
 engine::marbleprogram marble;
 engine::fpscounter fps;
+#ifndef __EMSCRIPTEN__
+std::string get_sky() {
+    if (GLAD_GL_OES_texture_compression_astc) return "https://umfer.us/galaxy/eso0932a_astc.pvr";
+    if (GLAD_GL_OES_compressed_ETC1_RGB8_texture) return "https://umfer.us/galaxy/eso0932a.pvr";
+    if (GLAD_GL_EXT_texture_compression_s3tc) return "https://umfer.us/galaxy/eso0932a.dds";
+    return "https://cdn.eso.org/images/publicationjpg/eso0932a.jpg";
+}
+#else
+std::string get_sky() {
+    const char *e = (const char *)glGetString(GL_EXTENSIONS);
+    if (strstr(e,"WEBGL_compressed_texture_astc")) return "https://umfer.us/galaxy/eso0932a_astc.pvr";
+    if (strstr(e,"WEBGL_compressed_texture_etc")) return "https://umfer.us/galaxy/eso0932a_etc.pvr";
+    if (strstr(e,"WEBGL_compressed_texture_etc1")) return "https://umfer.us/galaxy/eso0932a.pvr";
+    if (strstr(e,"WEBGL_compressed_texture_s3tc")) return "https://umfer.us/galaxy/eso0932a.dds";
+    return "https://cdn.eso.org/images/publicationjpg/eso0932a.jpg";
+}
+#endif
 double start;
+std::string sky;
+void init() {
+    start = glfwGetTime();
+    sky = get_sky();
+}
 void run() {
+    static bool _init;
     double mx,my;
     window(0,0,1920/2,1080/2, "gltf");
-    if (!start) start = glfwGetTime();
+    if (!_init) { init(); _init = true; }
     glfwGetCursorPos(window.window,&mx,&my);
     //asset("TextureCoordinateTest.gltf","https://raw.githubusercontent.com/KhronosGroupArchives/glTF-Sample-Models/refs/heads/main/2.0/TextureCoordinateTest/glTF/");
     //asset("SimpleSkin.gltf","https://raw.githubusercontent.com/KhronosGroupArchives/glTF-Sample-Models/refs/heads/main/2.0/SimpleSkin/glTF/");
@@ -37,20 +60,13 @@ void run() {
     model = HMM_M4D(1.0);
     camera.view = HMM_LookAt_RH(camera.eye,camera.target,{0,1,0});
     if (glfwGetKey(window.window, GLFW_KEY_GRAVE_ACCENT)!=GLFW_PRESS) {
-        //aspect=1;
         float fov = HMM_AngleDeg(75.178177);
-        //fov=0.25;
         camera.projection = HMM_Perspective_RH_NO(fov,aspect,0.01,10.0);
     } else {
         camera.projection = HMM_Orthographic_RH_NO(-aspect/2,+aspect/2,-1,+1,-10,+10);
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    //const char *sky = "https://cdn.eso.org/images/publicationjpg/eso0932a.jpg";
-    //const char *sky = "https://cdn.eso.org/images/large/eso0932a.jpg";
-    //const char *sky = "file://D:/dev/umfer-us/eso0932a.dds"; //bc1
-    //const char *sky = "file://D:/dev/umfer-us/eso0932a.pvr"; //ect1
-    const char *sky = "file://D:/dev/umfer-us/eso0932a_astc.pvr"; 
-    marble(0,0,window.width,window.height,&camera.view.Elements[0][0],&camera.projection.Elements[0][0],sky);
+    marble(0,0,window.width,window.height,&camera.view.Elements[0][0],&camera.projection.Elements[0][0],sky.c_str());
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
